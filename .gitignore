@@ -22,3 +22,9 @@ build/
 # Overstory runtime
 .overstory/worktrees/
 .overstory/logs/
+.overstory/mail.db
+.overstory/metrics.db
+.overstory/merge-queue.db
+
+# OS
+.DS_Store
