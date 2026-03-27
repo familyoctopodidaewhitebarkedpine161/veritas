@@ -413,21 +413,56 @@ veritas/
 
 ## Benchmark Results
 
-Veritas was evaluated across multiple benchmarks comparing **isolation mode** (agents verify independently) vs **debate mode** (agents share context, standard multi-agent approach).
+Veritas was evaluated across 3 benchmarks comparing **isolation mode** (agents verify independently) vs **debate mode** (agents share context, standard multi-agent approach).
 
-### Isolation vs Debate (30 claims)
+### FaithBench (NAACL 2025 — Hard Hallucination Detection)
 
-| Metric | Isolation | Debate | Winner |
-|--------|-----------|--------|--------|
-| Accuracy | **96.67%** | 93.33% | Isolation (+3.34%) |
-| Calibration (ECE) | **0.069** | 0.089 | Isolation |
-| Speed | **501s** | 1,240s | Isolation (2.5x faster) |
+The standard benchmark for hallucination detectors. Best published detector (o3-mini) scores 58% balanced accuracy.
 
-### Key Finding
+| Metric | Isolation | Debate | Delta |
+|--------|-----------|--------|-------|
+| **Balanced Accuracy** | **58.0%** | 48.0% | **+10.0%** |
+| Precision | **60.0%** | 48.4% | +11.6% |
+| F1 | 53.3% | 53.6% | Tied |
+| Speed | 805s | 1,940s | **2.4x faster** |
 
-Isolation-divergent verification is consistently **2.5-2.7x faster** and produces **better-calibrated** confidence scores than shared-context debate. On harder claims, isolation catches errors that debate misses due to conformity bias.
+Veritas isolation **matches o3-mini's published balanced accuracy** while providing structured failure modes and evidence chains that single-model detectors don't offer.
 
-> Full benchmark methodology, datasets, and raw results are available on the [`research` branch](../../tree/research).
+### RAG Grounding (Document Faithfulness)
+
+Tests whether Veritas catches unfaithful RAG outputs — answers that hallucinate facts not in the source documents.
+
+| Metric | Isolation | Debate | Delta |
+|--------|-----------|--------|-------|
+| **F1** | **89.7%** | 81.3% | **+8.4%** |
+| Precision | **81.3%** | 68.4% | **+12.8%** |
+| Recall | 100% | 100% | Tied |
+| False Positives | 3 | 6 | **Half the false alarms** |
+| Speed | 483s | 1,229s | **2.5x faster** |
+
+Both modes catch every hallucination (100% recall), but **debate wrongly flags twice as many faithful answers**. Shared context makes agents overly suspicious.
+
+### Adversarial Claims (Conformity Bias Test)
+
+50 claims with planted subtle errors — off-by-one dates, overgeneralizations, confident misconceptions.
+
+| Metric | Isolation | Debate | Delta |
+|--------|-----------|--------|-------|
+| Detection Rate | 100% | 100% | Tied |
+| Calibration (ECE) | **0.029** | 0.037 | Isolation |
+| Speed | 244s | 648s | **2.7x faster** |
+
+### Summary
+
+| What We Proved | Evidence |
+|---------------|----------|
+| Isolation is **2.4-2.7x faster** than debate | Consistent across all 3 benchmarks |
+| Isolation has **higher precision** | +12.8% on RAG, +11.6% on FaithBench |
+| Isolation has **fewer false positives** | Half the false alarms on RAG grounding |
+| Isolation matches **SOTA balanced accuracy** | 58% on FaithBench (= o3-mini) |
+| Debate over-flags faithful content | Shared context makes agents overly suspicious |
+
+> Full benchmark methodology, datasets, and raw results available on the [`research` branch](../../tree/research).
 
 ---
 
