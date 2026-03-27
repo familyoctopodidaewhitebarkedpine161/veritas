@@ -30,8 +30,11 @@ Rules:
 - If no relevant sources, report insufficient_info"""
 
     async def verify(self, claim: str, context: str | None, domain: str | None, references: list[str]) -> AgentFinding:
-        search_results = await self.search_provider.search(claim)
-        search_context = "\n\n".join(f"**{r.title}** ({r.url})\n{r.snippet}" for r in search_results)
+        try:
+            search_results = await self.search_provider.search(claim)
+        except Exception:
+            search_results = []
+        search_context = "\n\n".join(f"**{r.title}** ({r.url})\n{r.snippet}" for r in search_results) if search_results else "No search results available."
         prompt_parts = [self.build_prompt(claim, context, domain, references)]
         prompt_parts.append(f"\n## Search Results\n{search_context}")
         full_prompt = "\n".join(prompt_parts)
