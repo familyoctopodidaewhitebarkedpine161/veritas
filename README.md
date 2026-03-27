@@ -407,7 +407,7 @@ veritas/
 - **Typer + Rich** — CLI with color output
 - **httpx** — async HTTP for search providers
 - **Overstory** — git-worktree agent isolation (optional)
-- **75 tests** — full coverage with pytest
+- **72 tests** — full coverage with pytest
 
 ---
 
