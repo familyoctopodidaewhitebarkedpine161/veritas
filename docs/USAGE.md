@@ -8,10 +8,10 @@ Adversarial parallel verification for AI outputs. One interface, every use case.
 
 ```bash
 # From private repo (SSH)
-pip install git+ssh://git@github.com/yourorg/veritas.git
+pip install git+https://github.com/riaz-sana/veritas.git
 
 # From private repo (HTTPS with token)
-pip install git+https://<token>@github.com/yourorg/veritas.git
+pip install git+https://github.com/riaz-sana/veritas.git
 ```
 
 ### Environment

@@ -10,13 +10,13 @@ Detailed integration patterns for every architecture. The core principle: **the 
 
 ```bash
 # SSH (recommended for teams)
-pip install git+ssh://git@github.com/yourorg/veritas.git
+pip install git+https://github.com/riaz-sana/veritas.git
 
 # HTTPS with token
-pip install git+https://<token>@github.com/yourorg/veritas.git
+pip install git+https://github.com/riaz-sana/veritas.git
 
 # In requirements.txt
-git+ssh://git@github.com/yourorg/veritas.git@main#egg=veritas-verify
+git+https://github.com/riaz-sana/veritas.git@main#egg=veritas-verify
 ```
 
 ### Environment Variables
@@ -234,7 +234,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Veritas
-        run: pip install git+ssh://git@github.com/yourorg/veritas.git
+        run: pip install git+https://github.com/riaz-sana/veritas.git
 
       - name: Verify AI-generated docs
         env:

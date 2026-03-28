@@ -3,7 +3,7 @@
 
 project:
   name: veritas
-  root: /Users/waqasriaz/Desktop/overstory
+  root: .
   canonicalBranch: main
   qualityGates:
     - name: Tests

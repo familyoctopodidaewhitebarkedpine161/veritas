@@ -2,8 +2,8 @@
 
 **Multi-agent verification for AI outputs.** Three tools in one library.
 
-```
-pip install git+ssh://git@github.com/yourorg/veritas.git
+```bash
+pip install git+https://github.com/riaz-sana/veritas.git
 ```
 
 ---
@@ -117,7 +117,7 @@ All three tools use the same architecture: **specialized agents analyze in paral
 
 ```bash
 # Install
-pip install git+ssh://git@github.com/yourorg/veritas.git
+pip install git+https://github.com/riaz-sana/veritas.git
 
 # Set API key
 export ANTHROPIC_API_KEY="sk-ant-..."
@@ -310,6 +310,57 @@ Multi-agent wins 7/9 cases. Same accuracy, but significantly more thorough.
 export ANTHROPIC_API_KEY="sk-ant-..."       # Required
 export BRAVE_API_KEY="..."                   # Optional — enables web search
 ```
+
+---
+
+## Research Findings
+
+This project includes extensive research on multi-agent verification architectures. Key conclusions:
+
+- **Multi-agent produces more thorough analysis** than single-prompt (+1.6 completeness, +1.0 specificity in blind evaluation), but does NOT improve binary accuracy
+- **Information asymmetry does NOT improve claim-level verification** — full-context evaluation (RAGVUE-style) outperforms isolated agents on bias-triggering cases (97.1% vs 91.4%)
+- **Isolation is 2-3x faster** than shared-context debate (parallel vs sequential)
+- **Isolation has fewer false positives** on RAG grounding tasks (3 vs 6)
+
+Full findings: [docs/research/FINDINGS.md](docs/research/FINDINGS.md)
+
+---
+
+## Appendix: Research References
+
+### Papers Cited
+- Du et al. "Improving Factuality through Multiagent Debate" (ICML 2024) — [arxiv.org/abs/2305.14325](https://arxiv.org/abs/2305.14325)
+- "Emergent social conventions and collective bias in LLM populations" (Science Advances 2025) — [science.org/doi/10.1126/sciadv.adu9368](https://www.science.org/doi/10.1126/sciadv.adu9368)
+- "Cross-Context Verification" (2026) — [arxiv.org/abs/2603.21454](https://arxiv.org/abs/2603.21454)
+- FaithBench (NAACL 2025) — [github.com/vectara/FaithBench](https://github.com/vectara/FaithBench)
+- RAGVUE (2026) — [arxiv.org/abs/2601.04196](https://arxiv.org/abs/2601.04196)
+- RAG-X (2026) — [arxiv.org/abs/2603.03541](https://arxiv.org/abs/2603.03541)
+- Agent-as-a-Judge survey (ICML 2025) — [arxiv.org/abs/2601.05111](https://arxiv.org/abs/2601.05111)
+- Farquhar et al. "Semantic Entropy" (Nature 2024) — [nature.com/articles/s41586-024-07421-0](https://www.nature.com/articles/s41586-024-07421-0)
+- Multi-Agent Debate with Adaptive Stability — [openreview.net/forum?id=Vusd1Hw2D9](https://openreview.net/forum?id=Vusd1Hw2D9)
+- Amazon "Enhancing LLM-as-a-Judge via Multi-Agent Collaboration" — [amazon.science](https://assets.amazon.science/48/5d/20927f094559a4465916e28f41b5/enhancing-llm-as-a-judge-via-multi-agent-collaboration.pdf)
+
+### Competing Tools Evaluated
+- [RAGVUE](https://github.com/KeerthanaMurugaraj/RAGVue) — claim-level RAG evaluation
+- [Superagent](https://github.com/superagent-ai/superagent) — agentic AI safety with policy engine
+- [Galileo Luna](https://galileo.ai) — fast hallucination detection with fine-tuned models
+- [RAGAS](https://github.com/explodinggradients/ragas) — RAG evaluation metrics
+- [Axiom](https://axiommath.ai) — formal verification for Lean
+
+### Our Research Documents
+- [Complete Findings](docs/research/FINDINGS.md) — all 7 experiments with data
+- [Ablation Study](docs/research/ablation-study.md) — multi-agent vs single-prompt methodology
+- [Honest Assessment](docs/research/honest-assessment-march-2026.md) — competitive analysis with sources
+- [Enterprise Reality](docs/ENTERPRISE-REALITY.md) — practical deployment assessment
+- [Benchmark Methodology](docs/research/benchmarks/methodology.md) — evaluation design principles
+
+### Raw Benchmark Data
+- [Ablation results](docs/research/ablation-results.json)
+- [FaithBench results](docs/research/benchmarks/faithbench-results.json)
+- [RAG grounding results](docs/research/benchmarks/rag-grounding-results.json)
+- [Adversarial results](docs/research/benchmarks/adversarial-results.json)
+- [RAGVUE head-to-head](docs/research/ragvue-headtohead-results.json)
+- [Bias head-to-head](docs/research/bias-headtohead-results.json)
 
 ---
 

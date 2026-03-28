@@ -28,3 +28,12 @@ build/
 
 # OS
 .DS_Store
+
+# Claude Code local settings (contains local paths)
+.claude/
+
+# Overstory runtime databases
+.overstory/mail.db*
+.overstory/metrics.db*
+.overstory/merge-queue.db*
+.overstory/sessions.db*
