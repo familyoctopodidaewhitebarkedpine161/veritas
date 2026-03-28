@@ -293,7 +293,6 @@ docs/
 | [Honest Assessment](docs/research/honest-assessment-march-2026.md) | Competitive landscape — RAGVUE, Superagent, Galileo Luna, who does what |
 | [Enterprise Reality](docs/ENTERPRISE-REALITY.md) | Where Veritas works, where it doesn't, cost/latency analysis |
 | [Benchmark Methodology](docs/research/benchmarks/methodology.md) | Why each benchmark, dataset design, evaluation principles |
-| [Groundbreaking Options](docs/research/groundbreaking-options.md) | Analysis of genuinely unoccupied territory (code verification) |
 
 ### Raw Benchmark Data (JSON)
 
