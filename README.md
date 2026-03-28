@@ -4,7 +4,7 @@
 
 LLMs hallucinate. RAG pipelines fabricate facts not in the documents. AI agents take wrong actions based on flawed reasoning. In 2026, the best hallucination detectors still only score [58% accuracy](https://github.com/vectara/FaithBench). AI-generated code has [37% more vulnerabilities](https://checkmarx.com) than human-written code. And [40-60% of enterprise RAG deployments fail](https://www.stackai.com/blog/rag-limitations) to reach production because nobody can diagnose why.
 
-**Veritas is a research project exploring multi-agent verification for AI outputs** — with real benchmarks, honest results, and several things we proved wrong about our own assumptions.
+**Veritas is a research project exploring multi-agent verification for AI outputs** — with real benchmarks, tested hypotheses, and documented findings on what works and what doesn't.
 
 ```bash
 pip install git+https://github.com/riaz-sana/veritas.git
