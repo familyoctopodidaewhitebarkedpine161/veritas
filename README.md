@@ -1,6 +1,10 @@
 # Veritas
 
-**Multi-agent verification for AI outputs.** Three tools in one library.
+### Can you trust your AI's output?
+
+LLMs hallucinate. RAG pipelines fabricate facts not in the documents. AI agents take wrong actions based on flawed reasoning. In 2026, the best hallucination detectors still only score [58% accuracy](https://github.com/vectara/FaithBench). AI-generated code has [37% more vulnerabilities](https://checkmarx.com) than human-written code. And [40-60% of enterprise RAG deployments fail](https://www.stackai.com/blog/rag-limitations) to reach production because nobody can diagnose why.
+
+**Veritas is a research project exploring multi-agent verification for AI outputs** — with real benchmarks, honest results, and several things we proved wrong about our own assumptions.
 
 ```bash
 pip install git+https://github.com/riaz-sana/veritas.git
@@ -8,69 +12,107 @@ pip install git+https://github.com/riaz-sana/veritas.git
 
 ---
 
-## The Three Tools
+## What It Does
 
-Veritas does three things. The interface is always the same: pass what you want to check, get a structured result.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                        VERITAS                          │
-│                                                         │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │   verify()   │  │ diagnose_rag │  │ verify_action │  │
-│  │              │  │     ()       │  │     ()        │  │
-│  │ Check any    │  │ WHY did the  │  │ Is this agent │  │
-│  │ claim for    │  │ RAG pipeline │  │ action safe   │  │
-│  │ accuracy     │  │ fail?        │  │ to execute?   │  │
-│  └─────────────┘  └──────────────┘  └───────────────┘  │
-│                                                         │
-│  Same architecture: agents in isolation → synthesiser   │
-└─────────────────────────────────────────────────────────┘
-```
-
-### 1. Verify Claims
+Three tools. One interface. Every AI architecture.
 
 ```python
-from veritas import verify
+from veritas import verify, diagnose_rag, before_action
 
+# 1. Verify any claim
 result = await verify("The first iPhone was released in 2006")
-# REFUTED (0.98) — The first iPhone was released June 2007, not 2006.
-```
+# REFUTED (0.98) — Released June 2007, not 2006.
 
-### 2. Diagnose RAG Failures
-
-```python
-from veritas import diagnose_rag
-
+# 2. Diagnose WHY a RAG pipeline failed
 result = await diagnose_rag(
     query="What is our refund policy?",
     retrieved_docs=["Policy: 30-day return window..."],
     generated_answer="Our refund window is 90 days.",
 )
 # generation_contradiction — Answer says '90 days' but doc says '30 days'
-#   Retrieval relevance:  85%    ← Docs are fine
-#   Generation fidelity:   0%    ← THIS is where it broke
-#   3 ungrounded claims identified with source evidence
-```
+# Retrieval: 85% relevant  ← docs are fine
+# Generation:  0% faithful  ← THIS is where it broke
+# 3 ungrounded claims identified with source quotes
 
-### 3. Verify Agent Actions Before Execution
-
-```python
-from veritas import before_action
-
+# 3. Verify agent actions BEFORE execution
 @before_action
 async def transfer_funds(account: str, amount: float):
     ...
-
-# Veritas checks reasoning, parameters, risks, and scope
 # BLOCKED (0.99) — Amount $500K is 100x the $5K invoice. 12 risks identified.
 ```
 
 ---
 
-## How It Works
+## The Research Question
 
-All three tools use the same architecture: **specialized agents analyze in parallel isolation, then a synthesiser combines their findings.**
+> **Does using multiple isolated AI agents produce better verification than a single well-crafted prompt?**
+
+We ran 7 experiments to find out. Some confirmed our hypotheses. Some didn't.
+
+### What We Proved
+
+| Finding | Evidence |
+|---------|----------|
+| Multi-agent is **more thorough** than single-prompt | +1.6 completeness, +1.0 specificity in [blind evaluation](docs/research/ablation-study.md) (9 cases) |
+| Multi-agent does NOT improve **binary accuracy** | Both score 9.1/10 on getting the core diagnosis right |
+| Isolation is **2-3x faster** than shared-context debate | Consistent across [all benchmarks](docs/research/FINDINGS.md) |
+| Isolation produces **fewer false positives** on RAG tasks | 3 vs 6 false alarms on [25 grounding tests](docs/research/benchmarks/rag-grounding-results.json) |
+
+### What We Disproved
+
+| Hypothesis | Result |
+|-----------|--------|
+| "Information asymmetry prevents confirmation bias" | **Wrong.** Full-context evaluation [outperforms](docs/research/bias-headtohead-results.json) isolated agents 97.1% vs 91.4% on bias-triggering cases |
+| "Nobody does RAG root-cause diagnosis" | **Wrong.** [RAGVUE](https://arxiv.org/abs/2601.04196) (Jan 2026) and [RAG-X](https://arxiv.org/abs/2603.03541) (March 2026) do this |
+| "Nobody does pre-action verification" | **Wrong.** [Superagent](https://github.com/superagent-ai/superagent) Safety Agent (Dec 2025) does this |
+
+Full experiment details, raw data, and methodology: **[docs/research/FINDINGS.md](docs/research/FINDINGS.md)**
+
+---
+
+## Benchmark Results
+
+### Ablation: Multi-Agent vs Single-Prompt
+
+9 test cases (5 RAG + 4 action verification). Blind LLM judge, randomized order.
+
+| Dimension | Multi-Agent | Single-Prompt | Winner |
+|-----------|:-----------:|:-------------:|--------|
+| Accuracy | 9.1 | 9.1 | Tie |
+| Completeness | **9.7** | 8.1 | Multi-Agent (+1.6) |
+| Specificity | **9.4** | 8.4 | Multi-Agent (+1.0) |
+| Overall | **9.3** | 8.6 | Multi-Agent (+0.7) |
+| Cost | 4.4x | 1x | Single-Prompt |
+| Speed | 22.6s | 13.7s | Single-Prompt |
+
+**Takeaway:** Multi-agent finds more issues and cites better evidence. Single-prompt gets the verdict right at 1/4 the cost. Choose based on whether you need thoroughness or speed.
+
+### FaithBench (NAACL 2025 — hardest hallucination benchmark)
+
+| Metric | Veritas | Published SOTA (o3-mini) |
+|--------|:-------:|:------------------------:|
+| Balanced Accuracy | **58%** | 58% |
+
+### RAG Grounding (25 doc-answer pairs)
+
+| Metric | Isolation Mode | Debate Mode |
+|--------|:--------------:|:-----------:|
+| F1 | **89.7%** | 81.3% |
+| Precision | **81.3%** | 68.4% |
+| Recall | 100% | 100% |
+
+### RAGVUE Head-to-Head (bias-triggering cases)
+
+| Metric | Full-Context (RAGVUE-style) | Isolated Agents (Veritas) |
+|--------|:---------------------------:|:-------------------------:|
+| Claim Accuracy | **97.1%** | 91.4% |
+| False Positives | **1** | 3 |
+
+**Honest conclusion:** Full-context single-pass evaluation beats our isolated multi-agent approach for claim-level accuracy. We adopted this finding.
+
+---
+
+## How It Works
 
 ```
                       ┌─────────────────┐
@@ -83,11 +125,9 @@ All three tools use the same architecture: **specialized agents analyze in paral
             ▼                  ▼                   ▼
   ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
   │   Agent 1      │ │   Agent 2      │ │   Agent 3      │
-  │   (isolated)   │ │   (isolated)   │ │   (isolated)   │
   │                │ │                │ │                │
-  │ Sees different │ │ Sees different │ │ Sees different │
-  │ information    │ │ information    │ │ information    │
-  │ than Agent 2   │ │ than Agent 1   │ │ than Agent 1   │
+  │ Logic /        │ │ Facts /        │ │ Adversary /    │
+  │ Retrieval      │ │ Generation     │ │ Risk           │
   └───────┬────────┘ └───────┬────────┘ └───────┬────────┘
           │                  │                   │
           └──────────────────┼───────────────────┘
@@ -95,137 +135,86 @@ All three tools use the same architecture: **specialized agents analyze in paral
                   ┌─────────────────────┐
                   │    Synthesiser      │
                   │                     │
-                  │ Combines independent│
-                  │ findings into       │
-                  │ verdict + evidence  │
+                  │ Verdict + evidence  │
+                  │ + failure modes     │
                   └─────────────────────┘
 ```
 
-**Why isolation matters:** When agents share context, they reinforce each other's biases. When they're isolated, they catch different things. Our ablation study proved this: multi-agent finds +1.6 more issues (completeness) and cites +1.0 more specific evidence than a single prompt.
+Each tool uses specialized agents:
 
-### What each tool runs:
-
-| Tool | Agents | What each checks |
-|------|--------|-----------------|
-| `verify()` | Logic, Source, Adversary, Calibration, Synthesiser | Consistency, facts, counterexamples, confidence |
-| `diagnose_rag()` | Retrieval Auditor, Generation Auditor, Coverage Auditor, Synthesiser | Docs relevant? Answer faithful? KB has the info? |
-| `verify_action()` | Reasoning, Parameters, Risk, Scope, Synthesiser | Logic sound? Params correct? What could go wrong? Matches goal? |
+| Tool | Agents | What they check |
+|------|--------|----------------|
+| `verify()` | Logic, Source, Adversary, Calibration | Consistency, facts, counterexamples, confidence |
+| `diagnose_rag()` | Retrieval, Generation, Coverage | Docs relevant? Answer faithful? KB has the info? |
+| `verify_action()` | Reasoning, Parameters, Risk, Scope | Logic sound? Params correct? Risks? Matches goal? |
 
 ---
 
-## Quick Start
+## Real Test Output
+
+### RAG Diagnostics — caught 3 fabricated claims with source evidence
+
+```
+Input:  "Our refund window is 90 days for all items. Refunds processed instantly."
+Source: "30-day return window. Sale items final sale. 5-7 business days."
+
+Diagnosis: generation_contradiction
+Retrieval:  85% relevant  ← docs are correct
+Generation:  0% faithful  ← LLM ignored the documents
+
+Claims:
+  [UNGROUNDED] "90 days" → doc says 30 days
+  [UNGROUNDED] "all items including sale" → doc says sale items final sale
+  [UNGROUNDED] "processed instantly" → doc says 5-7 business days
+
+Fix: Add system prompt constraint to only use facts from documents.
+```
+
+### Action Verification — blocked a $500K fraud-pattern transfer
+
+```
+Action:  transfer_funds($500,000 → unknown_external_789)
+Goal:    Pay vendor invoice #INV-2025-001 for $5,000
+
+BLOCKED (0.99 confidence)
+
+Risks identified (12):
+  [CRITICAL] Amount is 100x the invoice ($500K vs $5K)
+  [CRITICAL] Recipient 'unknown_external_789' is unverified
+  [CRITICAL] Pattern matches Business Email Compromise fraud
+  [CRITICAL] $500K triggers mandatory AML reporting
+  [HIGH]     Wire transfer is irreversible
+```
+
+---
+
+## Install & Use
 
 ```bash
-# Install
 pip install git+https://github.com/riaz-sana/veritas.git
-
-# Set API key
 export ANTHROPIC_API_KEY="sk-ant-..."
-
-# Try it
-veritas check "The Great Wall is visible from space"
 ```
 
-### Python
-
+**Python:**
 ```python
-from veritas import verify, diagnose_rag, before_action, Verdict
-
-# Verify a claim
-result = await verify("claim", context="optional docs", domain="technical")
-
-# Diagnose a RAG failure
-diag = await diagnose_rag(query, retrieved_docs, generated_answer)
-
-# Gate an agent action
-@before_action
-async def dangerous_action(param):
-    ...
+from veritas import verify, diagnose_rag, verify_action, before_action
 ```
 
-### CLI
-
+**CLI:**
 ```bash
-veritas check "claim"              # Quick check
-veritas check "..." --verbose      # Full evidence chain
-veritas check "..." --json         # JSON output
-cat output.txt | veritas check --stdin
-veritas shell                      # Interactive mode
+veritas check "Any claim"
+veritas check "..." --verbose --json
+veritas shell
 ```
 
-### Claude Code Skill
+**Claude Code:** `/verify The RAG says our policy is 90 days`
 
-```
-/verify The RAG pipeline says our refund window is 90 days
-```
-
-### MCP Server (any AI tool)
-
+**MCP Server** (Claude Desktop, Cursor, any AI tool):
 ```json
-{
-  "mcpServers": {
-    "veritas": {
-      "command": "python",
-      "args": ["-m", "veritas.mcp_server"],
-      "env": { "ANTHROPIC_API_KEY": "sk-ant-..." }
-    }
-  }
-}
+{"mcpServers": {"veritas": {"command": "python", "args": ["-m", "veritas.mcp_server"]}}}
 ```
 
----
-
-## Integration — Same Pattern Everywhere
-
-```python
-# RAG: verify answer against retrieved docs
-result = await verify(claim=rag_answer, context="\n".join(docs))
-
-# Or use diagnose_rag for root-cause analysis
-diag = await diagnose_rag(query, docs, answer)
-if diag.diagnosis != RAGDiagnosis.FAITHFUL:
-    print(f"Root cause: {diag.root_cause}")
-    print(f"Fix: {diag.fix_suggestion}")
-
-# Agentic: verify before acting
-result = await verify_action(action="send_email", parameters={...}, goal="...")
-if not result.approved:
-    print(f"Blocked: {result.reasoning}")
-
-# Or use the decorator
-@before_action(goal="Process refund")
-async def process_refund(order_id, amount):
-    ...
-
-# Batch evaluation
-results = [await verify(claim=o) for o in model_outputs]
-
-# CI/CD
-veritas check "$(cat ai_output.txt)" --json
-```
-
----
-
-## Verdicts & Failure Modes
-
-| Verdict | Meaning | What to do |
-|---------|---------|------------|
-| `VERIFIED` | Evidence supports the claim | Safe to use |
-| `PARTIAL` | Some parts correct, some not | Check failure modes |
-| `UNCERTAIN` | Not enough evidence | Human review |
-| `DISPUTED` | Conflicting evidence | Human review |
-| `REFUTED` | Evidence contradicts the claim | Don't use — check why |
-
-When something is wrong, Veritas tells you the TYPE:
-
-| Failure Mode | Example |
-|-------------|---------|
-| `factual_error` | "Released in 2006" → actually 2007 |
-| `logical_inconsistency` | Premises don't support conclusion |
-| `unsupported_inference` | Correlation stated as causation |
-| `temporal_error` | Using 2020 data for a 2026 claim |
-| `scope_error` | "All X do Y" when only some do |
-| `source_conflict` | Two sources disagree |
+**Works with everything:** LangChain, LlamaIndex, CrewAI, AutoGen, FastAPI, CI/CD, batch eval. Same `verify(claim, context)` interface for all. See [docs/USAGE.md](docs/USAGE.md).
 
 ---
 
@@ -234,133 +223,111 @@ When something is wrong, Veritas tells you the TYPE:
 ```python
 from veritas import Config, AgentModels
 
-# Economy mode — 60% cheaper (Haiku for simple agents, Sonnet for critical ones)
+# Economy mode — Haiku for simple agents, Sonnet for critical (~60% cheaper)
 config = Config(agent_models=AgentModels.economy())
 
 # Caching — zero cost on repeat queries
-config = Config(cache_enabled=True, cache_ttl_seconds=3600)
+config = Config(cache_enabled=True)
 
 # Confidence routing — skip verification for high-confidence outputs
 config = Config(confidence_routing=True, confidence_threshold=0.8)
-result = await verify("claim", config=config, source_confidence=0.95)
-# Returns instantly — skipped
 
-# Domain-specific prompts (code, schema, medical, legal, financial, scientific)
+# Domain-specific — code, schema, medical, legal, financial, scientific
 result = await verify(claim=generated_code, context=spec, domain="code")
 ```
 
 ---
 
-## Benchmark Results
+## Verdicts & Failure Modes
 
-### Ablation: Multi-Agent vs Single-Prompt (9 cases, blind evaluation)
+| Verdict | Meaning |
+|---------|---------|
+| `VERIFIED` | Evidence supports the claim |
+| `PARTIAL` | Some parts correct, some not |
+| `UNCERTAIN` | Insufficient evidence |
+| `DISPUTED` | Conflicting evidence |
+| `REFUTED` | Evidence contradicts the claim |
 
-| Metric | Multi-Agent | Single-Prompt | Winner |
-|--------|-------------|---------------|--------|
-| Accuracy | 9.1 | 9.1 | Tie |
-| Completeness | **9.7** | 8.1 | **MA (+1.6)** |
-| Specificity | **9.4** | 8.4 | **MA (+1.0)** |
-| Overall | **9.3** | 8.6 | **MA (+0.7)** |
-| Cost | 4.4x | 1x | SP cheaper |
+When something fails, Veritas classifies WHY:
 
-Multi-agent wins 7/9 cases. Same accuracy, but significantly more thorough.
-
-### RAG Grounding (25 items)
-
-| Metric | Result |
-|--------|--------|
-| F1 | **89.7%** |
-| Precision | 81.3% |
-| Recall | 100% |
-
-### FaithBench (NAACL 2025, 50 samples)
-
-| Metric | Result | Published SOTA |
-|--------|--------|---------------|
-| Balanced Accuracy | **58%** | 58% (o3-mini) |
+| Type | What it means |
+|------|--------------|
+| `factual_error` | A fact is wrong |
+| `logical_inconsistency` | Reasoning contradicts itself |
+| `unsupported_inference` | Claim exceeds the evidence |
+| `temporal_error` | Information is outdated |
+| `scope_error` | Overgeneralization |
+| `source_conflict` | Sources disagree |
 
 ---
 
-## Docs
+## Project Structure
 
-| Document | Description |
-|----------|-------------|
-| [Usage Guide](docs/USAGE.md) | Complete integration patterns for every architecture |
-| [Enterprise Reality](docs/ENTERPRISE-REALITY.md) | Honest assessment of where it works and doesn't |
-| [Ablation Study](docs/research/ablation-study.md) | Multi-agent vs single-prompt proof |
-| [Project Status](docs/research/project-status-report.md) | Full status with strengths and weaknesses |
-
----
-
-## Performance
-
-| Metric | Value |
-|--------|-------|
-| Time per verify() | ~15-20s (multi-agent) / ~5s (single-prompt) |
-| Time per diagnose_rag() | ~12-20s |
-| Time per verify_action() | ~20-25s |
-| Cost per call | ~$0.08 (multi-agent) / ~$0.02 (single-prompt) |
-| Tests | 110 passing |
-
----
-
-## Setup
-
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."       # Required
-export BRAVE_API_KEY="..."                   # Optional — enables web search
+```
+veritas/
+  core/           # verify(), config, cache, data models
+  agents/         # 5 verification agents + domain prompts
+  diagnostics/    # RAG diagnostic engine
+  agentic/        # Pre-action verification + @before_action
+  orchestration/  # Parallel runner + challenge round
+  providers/      # Claude, Brave Search, Tavily
+  cli/            # check, shell, benchmark commands
+  ablation/       # Multi-agent vs single-prompt comparison code
+  benchmarks/     # FaithBench, RAG grounding, adversarial datasets
+  mcp_server.py   # MCP server for any AI tool
+skills/verify/    # Claude Code skill
+docs/
+  research/       # All experiment data, findings, methodology
+  USAGE.md        # Integration patterns
+  ENTERPRISE-REALITY.md  # Honest deployment assessment
 ```
 
----
-
-## Research Findings
-
-This project includes extensive research on multi-agent verification architectures. Key conclusions:
-
-- **Multi-agent produces more thorough analysis** than single-prompt (+1.6 completeness, +1.0 specificity in blind evaluation), but does NOT improve binary accuracy
-- **Information asymmetry does NOT improve claim-level verification** — full-context evaluation (RAGVUE-style) outperforms isolated agents on bias-triggering cases (97.1% vs 91.4%)
-- **Isolation is 2-3x faster** than shared-context debate (parallel vs sequential)
-- **Isolation has fewer false positives** on RAG grounding tasks (3 vs 6)
-
-Full findings: [docs/research/FINDINGS.md](docs/research/FINDINGS.md)
+110 tests. Python 3.10+. MIT License.
 
 ---
 
-## Appendix: Research References
+## Research Documents
 
-### Papers Cited
-- Du et al. "Improving Factuality through Multiagent Debate" (ICML 2024) — [arxiv.org/abs/2305.14325](https://arxiv.org/abs/2305.14325)
-- "Emergent social conventions and collective bias in LLM populations" (Science Advances 2025) — [science.org/doi/10.1126/sciadv.adu9368](https://www.science.org/doi/10.1126/sciadv.adu9368)
-- "Cross-Context Verification" (2026) — [arxiv.org/abs/2603.21454](https://arxiv.org/abs/2603.21454)
-- FaithBench (NAACL 2025) — [github.com/vectara/FaithBench](https://github.com/vectara/FaithBench)
-- RAGVUE (2026) — [arxiv.org/abs/2601.04196](https://arxiv.org/abs/2601.04196)
-- RAG-X (2026) — [arxiv.org/abs/2603.03541](https://arxiv.org/abs/2603.03541)
-- Agent-as-a-Judge survey (ICML 2025) — [arxiv.org/abs/2601.05111](https://arxiv.org/abs/2601.05111)
-- Farquhar et al. "Semantic Entropy" (Nature 2024) — [nature.com/articles/s41586-024-07421-0](https://www.nature.com/articles/s41586-024-07421-0)
-- Multi-Agent Debate with Adaptive Stability — [openreview.net/forum?id=Vusd1Hw2D9](https://openreview.net/forum?id=Vusd1Hw2D9)
-- Amazon "Enhancing LLM-as-a-Judge via Multi-Agent Collaboration" — [amazon.science](https://assets.amazon.science/48/5d/20927f094559a4465916e28f41b5/enhancing-llm-as-a-judge-via-multi-agent-collaboration.pdf)
+| Document | What's in it |
+|----------|-------------|
+| **[FINDINGS.md](docs/research/FINDINGS.md)** | All 7 experiments — what we proved, what we disproved, raw data |
+| [Ablation Study](docs/research/ablation-study.md) | Multi-agent vs single-prompt — methodology, 9 test cases, blind evaluation |
+| [Honest Assessment](docs/research/honest-assessment-march-2026.md) | Competitive landscape — RAGVUE, Superagent, Galileo Luna, who does what |
+| [Enterprise Reality](docs/ENTERPRISE-REALITY.md) | Where Veritas works, where it doesn't, cost/latency analysis |
+| [Benchmark Methodology](docs/research/benchmarks/methodology.md) | Why each benchmark, dataset design, evaluation principles |
+| [Groundbreaking Options](docs/research/groundbreaking-options.md) | Analysis of genuinely unoccupied territory (code verification) |
 
-### Competing Tools Evaluated
+### Raw Benchmark Data (JSON)
+
+| Dataset | Samples | Key Result |
+|---------|---------|------------|
+| [Ablation](docs/research/ablation-results.json) | 9 cases | MA 9.3 vs SP 8.6 overall |
+| [FaithBench](docs/research/benchmarks/faithbench-results.json) | 50 | 58% balanced accuracy |
+| [RAG Grounding](docs/research/benchmarks/rag-grounding-results.json) | 25 | 89.7% F1 |
+| [Adversarial](docs/research/benchmarks/adversarial-results.json) | 50 | 100% detection (too easy) |
+| [RAGVUE H2H](docs/research/ragvue-headtohead-results.json) | 33 claims | Tied at 100% |
+| [Bias H2H](docs/research/bias-headtohead-results.json) | 35 claims | RAGVUE 97.1% vs Veritas 91.4% |
+
+---
+
+## References
+
+### Papers
+- Du et al. "[Improving Factuality through Multiagent Debate](https://arxiv.org/abs/2305.14325)" — ICML 2024
+- "[Emergent social conventions and collective bias in LLM populations](https://www.science.org/doi/10.1126/sciadv.adu9368)" — Science Advances 2025
+- "[Cross-Context Verification](https://arxiv.org/abs/2603.21454)" — 2026
+- "[RAGVUE](https://arxiv.org/abs/2601.04196)" — 2026
+- "[Agent-as-a-Judge](https://arxiv.org/abs/2601.05111)" — ICML 2025
+- "[Semantic Entropy](https://www.nature.com/articles/s41586-024-07421-0)" — Nature 2024
+- "[FaithBench](https://github.com/vectara/FaithBench)" — NAACL 2025
+- Amazon "[Enhancing LLM-as-a-Judge via Multi-Agent Collaboration](https://assets.amazon.science/48/5d/20927f094559a4465916e28f41b5/enhancing-llm-as-a-judge-via-multi-agent-collaboration.pdf)"
+
+### Competing Tools
 - [RAGVUE](https://github.com/KeerthanaMurugaraj/RAGVue) — claim-level RAG evaluation
-- [Superagent](https://github.com/superagent-ai/superagent) — agentic AI safety with policy engine
-- [Galileo Luna](https://galileo.ai) — fast hallucination detection with fine-tuned models
 - [RAGAS](https://github.com/explodinggradients/ragas) — RAG evaluation metrics
+- [Superagent](https://github.com/superagent-ai/superagent) — agentic AI safety
+- [Galileo Luna](https://galileo.ai) — fast hallucination detection
 - [Axiom](https://axiommath.ai) — formal verification for Lean
-
-### Our Research Documents
-- [Complete Findings](docs/research/FINDINGS.md) — all 7 experiments with data
-- [Ablation Study](docs/research/ablation-study.md) — multi-agent vs single-prompt methodology
-- [Honest Assessment](docs/research/honest-assessment-march-2026.md) — competitive analysis with sources
-- [Enterprise Reality](docs/ENTERPRISE-REALITY.md) — practical deployment assessment
-- [Benchmark Methodology](docs/research/benchmarks/methodology.md) — evaluation design principles
-
-### Raw Benchmark Data
-- [Ablation results](docs/research/ablation-results.json)
-- [FaithBench results](docs/research/benchmarks/faithbench-results.json)
-- [RAG grounding results](docs/research/benchmarks/rag-grounding-results.json)
-- [Adversarial results](docs/research/benchmarks/adversarial-results.json)
-- [RAGVUE head-to-head](docs/research/ragvue-headtohead-results.json)
-- [Bias head-to-head](docs/research/bias-headtohead-results.json)
 
 ---
 
