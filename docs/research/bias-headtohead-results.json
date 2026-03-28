@@ -1,0 +1,58 @@
+{
+  "total_cases": 6,
+  "total_claims": 35,
+  "ragvue": {
+    "correct": 34,
+    "accuracy": 0.9714285714285714,
+    "false_positives": 1
+  },
+  "veritas": {
+    "correct": 32,
+    "accuracy": 0.9142857142857143,
+    "false_positives": 3
+  },
+  "per_case": [
+    {
+      "name": "BIAS: Plausible answer, wrong product docs",
+      "ragvue_acc": 1.0,
+      "veritas_acc": 0.8571428571428571,
+      "ragvue_fp": 0,
+      "veritas_fp": 1
+    },
+    {
+      "name": "BIAS: Confident answer extrapolating vague docs",
+      "ragvue_acc": 0.75,
+      "veritas_acc": 0.75,
+      "ragvue_fp": 1,
+      "veritas_fp": 1
+    },
+    {
+      "name": "BIAS: Real quotes interwoven with fabrications",
+      "ragvue_acc": 1.0,
+      "veritas_acc": 1.0,
+      "ragvue_fp": 0,
+      "veritas_fp": 0
+    },
+    {
+      "name": "BIAS: Same jargon, opposite conclusions",
+      "ragvue_acc": 1.0,
+      "veritas_acc": 1.0,
+      "ragvue_fp": 0,
+      "veritas_fp": 0
+    },
+    {
+      "name": "BIAS: Correct numbers, wrong time period",
+      "ragvue_acc": 1.0,
+      "veritas_acc": 0.8,
+      "ragvue_fp": 0,
+      "veritas_fp": 1
+    },
+    {
+      "name": "BIAS: Real framework, fabricated details",
+      "ragvue_acc": 1.0,
+      "veritas_acc": 1.0,
+      "ragvue_fp": 0,
+      "veritas_fp": 0
+    }
+  ]
+}
